@@ -1,0 +1,1025 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>chuva de ovos - Minha Empresa -TM</title>
+	<style type="text/css">
+	body { margin: 0; padding: 0; background: #000;}
+	canvas { display: block; margin: 0 auto; background: #fff; }
+	</style>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0" />
+        <script> 
+	        function hideAddressBar(){
+	          if(document.documentElement.scrollHeight<window.outerHeight/window.devicePixelRatio)
+	            document.documentElement.style.height=(window.outerHeight/window.devicePixelRatio)+'px';
+	          setTimeout(window.scrollTo(1,1),0);
+	        }
+	        window.addEventListener("load",function(){hideAddressBar();});
+	        window.addEventListener("orientationchange",function(){hideAddressBar();});
+        </script>
+	
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:300|Raleway:100' rel='stylesheet' type='text/css'>
+	<script src="libs/phaser.js"></script>
+</head>
+<body>
+
+<script type="text/javascript">
+
+(function () {
+
+	var game = new Phaser.Game(400, 600, Phaser.CANVAS, '', { preload: preload, create: create, update: update/*, render: render*/ });
+
+	//state var
+	var st_n = 1;
+
+	//splash var
+	var sp_t = 0;//timer splash
+	var b;//bg
+	var l1, l2;//logos
+
+	//menu var
+	var lg;//marca
+	var b_m, b_j, b_a, b_m_go;//botoes
+	var bg_aj, aj = false;//ajuda
+
+	//jogo var
+	var ingame = false;
+	var f, line;//fim
+	var h;//puleiro
+	var n;//ninho
+	var w, w_dt = 0, w_d = 50, w_s = 75;//branco
+	var g, g_dt = 0, g_d = 500, g_s = 75;//ouro
+	var p, p_dt = 0, p_d = 300, p_s = 75;//preto
+	var lv = 0, nivel = 1 , lv_t, nv = 50;//level game
+	var s = 0, s_t;//score
+	var l = 5, l_t;//life
+	var g_b, put_egg_b = false, i_g_b = 0;//galinhas branca
+	var g_m, put_egg_m = false, i_g_m = 0;//galinhas marrom 1
+	var g_a, put_egg_a = false, i_g_a = 0;//galinhas amarela 1
+	var g_m2, put_egg_m2 = false, i_g_m2 = 0;//galinhas marrom 1
+	var g_a2, put_egg_a2 = false, i_g_a2 = 0;//galinhas amarela 1
+	
+	var s_one, s_ten, s_five, s_m_one, s_l_one;
+
+	var colisao_um = false, colisao_dez = false, colisao_cinco = false, colisao_vida = false, level_up = false;
+	var hud, bt_pause, bt_s, bt_of_s;
+
+	//gameover var
+	var go_n_t, bg_go;
+
+	//sons
+	var fx_porovo, fx_quebraovo, fx_levelup, fx_gameover, fx_white, fx_gold, fx_black, bg_sound;
+	
+
+
+	function preload() {
+
+	game.load.image('bg', 'imgs/bg.png');//bg
+	game.load.image('thata', 'imgs/thata.png');//thata
+	game.load.image('energie', 'imgs/energia.png');//energie
+	game.load.image('logo', 'imgs/logo.png');//marca jogo
+	game.load.image('bg_ajuda', 'imgs/bg_ajuda.png');//ajuda
+	game.load.image('bg_gameover', 'imgs/bg_gameover.png');//ajuda
+
+	game.load.spritesheet('btn_jogar', 'imgs/bt_jogar.png', 193, 71);//botaojogar
+	game.load.spritesheet('btn_ajuda', 'imgs/bt_ajuda.png', 193, 71);//botaojogar
+	game.load.spritesheet('btn_menu', 'imgs/bt_menu.png', 193, 71);//botaojogar
+	game.load.spritesheet('bt_pause', 'imgs/bt_pause.png', 70, 70);//botaojogar
+	game.load.spritesheet('bt_s', 'imgs/bt_s.png', 70, 70);//botaojogar
+	game.load.spritesheet('bt_of_s', 'imgs/bt_of_s.png', 70, 70);//botaojogar
+	
+	game.load.image('line', 'imgs/floor.jpg');//FIM
+	game.load.image('floor', 'imgs/floor2.png');//FIM
+	game.load.image('hud', 'imgs/hud.png');//hud
+	game.load.image('hock', 'imgs/hocked.png');//puleiro
+	//game.load.image('nest', 'imgs/ninho.png');//ninho
+	game.load.spritesheet('nest', 'imgs/ninho_2.png', 370, 165);
+	//game.load.image('egg_w', 'imgs/w_egg.png');//branco
+	game.load.spritesheet('egg_w', 'imgs/w_egg_2.png', 23, 31);
+	//game.load.image('egg_g', 'imgs/egg_g.png');//ouro
+	game.load.spritesheet('egg_g', 'imgs/g_egg_2.png', 23, 31);
+	//game.load.image('egg_p', 'imgs/egg_b.png');//preto
+	game.load.spritesheet('egg_p', 'imgs/b_egg_2.png', 23, 31);
+	
+
+	//galinha
+	game.load.spritesheet('g_b', 'imgs/g_branca.png', 53, 130);
+	game.load.spritesheet('g_m', 'imgs/g_marrom.png', 53, 130);
+	game.load.spritesheet('g_a', 'imgs/g_amarela.png', 53, 130);
+
+
+
+	
+	game.load.image('s_one', 'imgs/1.png');//+1 score
+	game.load.image('s_ten', 'imgs/10.png');//+10 score
+	game.load.image('s_five', 'imgs/5.png');//-5 score
+	game.load.image('s_m_one', 'imgs/m1.png');//+1 level
+	game.load.image('s_l_one', 'imgs/l1.png');//-1 life
+
+	game.load.audio('fx_porovo', ['sons/por_ovo.mp3', 'sons/por_ovo.ogg']);
+	game.load.audio('fx_quebraovo', ['sons/quebra_ovo.mp3', 'sons/quebra_ovo.ogg']);
+	
+	game.load.audio('fx_levelup', ['sons/levelup.mp3', 'sons/levelup.ogg']);
+	game.load.audio('fx_gameover', ['sons/gameover.mp3', 'sons/gameover.ogg']);
+	game.load.audio('fx_white', ['sons/white.mp3', 'sons/white.ogg']);
+	game.load.audio('fx_gold', ['sons/gold.mp3', 'sons/gold.ogg']);
+	game.load.audio('fx_black', ['sons/black.mp3', 'sons/black.ogg']);
+	game.load.audio('bg_sound', ['sons/bg_sound.mp3', 'sons/bg_sound.ogg']);
+
+
+	game.stage.scaleMode = Phaser.StageScaleMode.SHOW_ALL;
+	game.stage.scale.setShowAll();
+	game.stage.scale.refresh();
+
+
+	}
+
+
+	function create() {
+
+
+		//BG
+		//game.stage.backgroundColor = '#0a1d87';
+		b = game.add.sprite(0, -150, 'bg');
+		b.z = 0;
+
+
+		//logos
+		l1 = game.add.sprite(-350, game.world.centerY - 75, 'thata');
+		l1.z = 1;
+		l2 = game.add.sprite(-350, game.world.centerY - 50, 'energie');
+		l2.z = 1;
+
+
+		//marca do jogo
+		lg = game.add.sprite(-350, 50, 'logo');
+		lg.z = 1;
+
+
+		//bg ajuda
+		bg_aj = game.add.sprite(-650, 0, 'bg_ajuda');
+		bg_aj.z = 2;
+
+
+		//bg gameover
+		bg_go = game.add.sprite(0, 650, 'bg_gameover');
+		bg_go.z = 2;
+
+
+		//botao jogar
+		b_j = game.add.button(-200, game.world.centerY + 70, 'btn_jogar', jogar, this, 2, 1, 0);
+		//botao ajuda
+		b_a = game.add.button(-200, game.world.centerY + 175, 'btn_ajuda', ajuda, this, 2, 1, 0);
+		//botao menu
+		b_m = game.add.button(-200, 505, 'btn_menu', menu, this, 2, 1, 0);
+		//botao menu game over
+		b_m_go = game.add.button(-200, game.world.centerY + 175, 'btn_menu', menu_go, this, 2, 1, 0);
+
+
+		//botao pausa
+		bt_pause = game.add.button(420, game.world.centerY - 75, 'bt_pause', pause, this, 1, 0, 2);
+		bt_pause.scale.x = 0.8;
+		bt_pause.scale.y = 0.8;
+		bt_pause.z = 2;
+
+
+
+		//botao som off
+		bt_of_s = game.add.button(420, game.world.centerY - 5, 'bt_of_s', off_som, this, 1, 0, 2);
+		bt_of_s.scale.x = 0.8;
+		bt_of_s.scale.y = 0.8;
+		bt_of_s.z = 2;
+
+
+		//botao som on
+		bt_s = game.add.button(420, game.world.centerY - 5, 'bt_s', on_som, this, 1, 0, 2);
+		bt_s.scale.x = 0.8;
+		bt_s.scale.y = 0.8;
+		bt_s.z = 2;
+
+
+
+
+
+		
+
+
+		//NINHO
+		n = game.add.sprite(game.world.centerX, 800, 'nest');
+		n.anchor.setTo(0.5,0.5);
+		n.body.setSize(300, 40, 0, 15);
+		n.animations.add('zero', [0]);
+		n.animations.add('one', [1]);
+		n.animations.add('three', [2]);
+		n.animations.add('five', [3]);
+		n.z = 2;
+		n.scale.x = 0.4;
+	   	n.scale.y = 0.4;
+
+
+		//OVOS
+		w = game.add.group();
+		w.z = 1;
+		g = game.add.group();
+		g.z = 1;
+		p = game.add.group();
+		p.z = 1;
+		
+
+		
+
+		//galinhas marrom (1)
+		g_m = game.add.sprite(25 , -200, "g_m");
+		g_m.scale.x = 1.2;
+	   	g_m.scale.y = 1.2;
+	   	g_m.animations.add('idle', [0]);
+		g_m.animations.add('egg_put', [2, 1, 2], 3);
+		g_m.z = 2;
+
+		//galinhas amarela (2)
+		g_a = game.add.sprite(100 , -200, "g_a");
+		g_a.scale.x = 1.2;
+	   	g_a.scale.y = 1.2;
+	   	g_a.animations.add('idle', [0]);
+		g_a.animations.add('egg_put', [2, 1, 2], 3);
+		g_a.z = 2;
+
+		//galinhas branca (centro)
+		g_b = game.add.sprite(game.world.centerX - 23 , -200, "g_b");
+		g_b.scale.x = 1.2;
+	   	g_b.scale.y = 1.2;
+	   	g_b.animations.add('idle', [0]);
+		g_b.animations.add('egg_put', [2, 1, 2], 3);
+		g_b.z = 2;
+
+		//galinhas marrom (4)
+		g_m2 = game.add.sprite(257 , -200, "g_m");
+		g_m2.scale.x = 1.2;
+	   	g_m2.scale.y = 1.2;
+	   	g_m2.animations.add('idle', [0]);
+		g_m2.animations.add('egg_put', [2, 1, 2],3);
+		g_m2.z = 2;
+
+		//galinhas amarela (5)
+		g_a2 = game.add.sprite(327 , -200, "g_a");
+		g_a2.scale.x = 1.2;
+	   	g_a2.scale.y = 1.2;
+	   	g_a2.animations.add('idle', [0]);
+		g_a2.animations.add('egg_put', [2, 1, 2], 3);
+		g_a2.z = 2;
+
+		//PULEIRO
+		h = game.add.sprite(0, -150, 'hock');
+		h.z = 2;
+
+
+		//FIM
+		f = game.add.sprite(0, 650, 'floor');
+		f.body.immovable = true;
+		f.scale.y = 1.1;
+		f.alpha = 0.4;
+		f.z = 2;
+		
+		
+		//line
+		line = game.add.sprite(0, 590, 'floor');
+		line.body.immovable = true;
+		line.scale.y = 1.1;
+		line.alpha = 0.4;
+		line.z = 2;
+
+
+
+		//hud
+		hud = game.add.sprite(0, -150, 'hud');
+		hud.z = 2;
+
+
+		
+		//TEXTOS score/life/level
+		s_t = game.add.text(80, -150, ' 0', { font: "20px Arial", fill: "#090974", align: "center" });
+		s_t.z = 2;
+		lv_t = game.add.text(220, -150, ' 1', { font: "20px Arial", fill: "#090974", align: "center" });
+		lv_t.z = 2;
+		l_t = game.add.text(340, -150, ' 5', { font: "20px Arial", fill: "#ff0D00", align: "center" });
+		l_t.z = 2;
+
+
+		go_n_t = game.add.text(game.world.centerX - 30, -150, '0', { font: "75px Arial", fill: "#FFFF00", align: "center", stroke: "#FFFF00", stroke: "#3000ff", strokeThickness: 3 });
+		go_n_t.z = 2;
+
+
+
+	//score visible
+		s_one = game.add.group();
+		s_one.z = 3;
+
+		s_ten = game.add.group();
+		s_ten.z = 3;
+
+		s_five = game.add.group();
+		s_five.z = 3;
+
+		s_m_one = game.add.group();
+		s_m_one.z = 3;
+
+		s_l_one = game.add.group();
+		s_l_one.z = 3;
+
+
+
+
+		//sons
+		fx_porovo = game.add.audio('fx_porovo');
+		fx_quebraovo = game.add.audio('fx_quebraovo');
+		fx_levelup = game.add.audio('fx_levelup');
+		fx_gameover = game.add.audio('fx_gameover');
+		fx_white = game.add.audio('fx_white');
+		fx_gold = game.add.audio('fx_gold');
+		fx_black = game.add.audio('fx_black');
+		
+		bg_sound = game.add.audio('bg_sound');
+
+
+	}
+
+
+
+	function update() {
+
+	if(st_n == 3){
+		ingame = true;
+
+		n.input.start(0,true);
+		n.input.enableDrag(true);
+		n.input.allowVerticalDrag = false;
+
+	} else {
+		ingame = false; 
+	}
+
+	if(st_n == 1){
+		
+		sp_t += 1;
+
+		if (sp_t > 10 && sp_t <= 75){
+			l1.x = 50;
+		}
+		if (sp_t <= 10 || sp_t > 75){
+			l1.x = -350;
+		}
+		if (sp_t > 75 && sp_t <= 150){
+			l2.x = 50;
+		}
+		if (sp_t <= 75 || sp_t > 150){
+			l2.x = -350;
+		}
+		
+			if(sp_t >= 160){
+				sp_t = 0;
+
+				st_n += 1;
+
+			}
+
+		//bg_sound.play('bg_sound',  0, -1, true);
+		//bg_sound.volume = 0.2;
+		
+		line.alpha = 0.4;
+	}
+	
+	if(st_n == 2){
+
+			b_m_go.x = -200;
+			go_n_t.y = -200;
+
+			w_dt = 0;
+			g_dt = 0;
+			p_dt = 0;
+			
+
+			if(s != 0){
+				s = 0;
+				s_t.text = ' 0';
+			}
+			if(lv != 1){
+				lv = 1;
+				lv_t.text = ' 1';
+			}
+			if(l != 5){
+				l = 5;
+				l_t.text = ' 5';
+			}
+
+		if (aj == false){
+			sp_t = 0;
+			lg.x = 50;
+			b_j.x = 100;
+			b_a.x = 100;
+			line.alpha = 0.4;
+			bg_aj.x = -650;
+			b_m.x = -200;
+
+		} else {
+			bg_aj.x = 0;
+			b_m.x = 100;
+			line.alpha = 0;
+			b_j.x = -200;
+			b_a.x = -200;
+			lg.x = -350;
+
+		}
+	}
+
+
+	if(st_n == 3){
+		game.add.tween(b).to({ y: 0 }, 1000, Phaser.Easing.Linear.None, true);//tweener bg
+		game.add.tween(h).to({ y: 120 }, 1000, Phaser.Easing.Linear.None, true);//tweener puleiro
+		game.add.tween(hud).to({ y: 0 }, 1000, Phaser.Easing.Linear.None, true);//tweener hud
+		
+
+		game.add.tween(g_m).to({ y: 60 }, 1000, Phaser.Easing.Linear.None, true);//galinha 1
+		game.add.tween(g_a).to({ y: 60 }, 1000, Phaser.Easing.Linear.None, true);//galinha 2
+		game.add.tween(g_b).to({ y: 60 }, 1000, Phaser.Easing.Linear.None, true);//galinha centro
+		game.add.tween(g_m2).to({ y: 60 }, 1000, Phaser.Easing.Linear.None, true);//galinha 1
+		game.add.tween(g_a2).to({ y: 60 }, 1000, Phaser.Easing.Linear.None, true);//galinha 2
+		
+
+		n.y = 520;
+		if(s == 0){
+			n.animations.play('zero', 0, true);
+		}
+		if(s >= 1 && s <= 4){
+			n.animations.play('one', 0, true);
+		}
+		if(s >= 5 && s <= 9){
+			n.animations.play('three', 0, true);
+		}
+		if(s >= 10){
+			n.animations.play('five', 0, true);
+		}
+
+
+
+		//animação galinha marrom 1
+		if(put_egg_m == false){
+			g_m.animations.play('idle', 0, true);
+		} else {
+			g_m.animations.play('egg_put', 0, true);			
+			i_g_m += 1;
+			if (i_g_m >= 25){
+				put_egg_m = false;
+				g_m.animations.play('idle', 0, true);
+				i_g_m = 0;
+			}
+		}
+
+		//animação galinha amarela 2
+		if(put_egg_a == false){
+			g_a.animations.play('idle', 0, true);
+		} else {
+			g_a.animations.play('egg_put', 0, true);			
+			i_g_a += 1;
+			if (i_g_a >= 25){
+				put_egg_a = false;
+				g_a.animations.play('idle', 0, true);
+				i_g_a = 0;
+			}
+		}
+
+		//animação galinha branca
+		if(put_egg_b == false){
+			g_b.animations.play('idle', 0, true);
+		} else {
+			g_b.animations.play('egg_put', 0, true);			
+			i_g_b += 1;
+			if (i_g_b >= 25){
+				put_egg_b = false;
+				g_b.animations.play('idle', 0, true);
+				i_g_b = 0;
+			}
+		}
+
+		//animação galinha marrom 3
+		if(put_egg_m2 == false){
+			g_m2.animations.play('idle', 0, true);
+		} else {
+			g_m2.animations.play('egg_put', 0, true);			
+			i_g_m2 += 1;
+			if (i_g_m2 >= 25){
+				put_egg_m2 = false;
+				g_m2.animations.play('idle', 0, true);
+				i_g_m2 = 0;
+			}
+		}
+
+		//animação galinha amarela 3
+		if(put_egg_a2 == false){
+			g_a2.animations.play('idle', 0, true);
+		} else {
+			g_a2.animations.play('egg_put', 0, true);			
+			i_g_a2 += 1;
+			if (i_g_a2 >= 25){
+				put_egg_a2 = false;
+				g_a2.animations.play('idle', 0, true);
+				i_g_a2 = 0;
+			}
+		}
+
+
+
+		if(n.y != 520){
+			n.y = 520;
+		}
+		if(n.x <= 50){
+			n.x = 51;
+		}
+		if(n.x >= 550){
+			n.x = 549;
+		}
+
+
+		f.y = 550;
+		line.alpha = 0;
+
+		game.add.tween(s_t).to({ y: 20 }, 1000, Phaser.Easing.Linear.None, true);//tweener score
+		game.add.tween(lv_t).to({ y: 20 }, 1000, Phaser.Easing.Linear.None, true);//tweener level
+		game.add.tween(l_t).to({ y: 20 }, 1000, Phaser.Easing.Linear.None, true);//tweener life
+		
+		game.add.tween(bt_pause).to({ x: 345 }, 1000, Phaser.Easing.Linear.None, true);//tweener life
+		game.add.tween(bt_of_s).to({ x: 345 }, 1000, Phaser.Easing.Linear.None, true);//tweener life
+
+
+		//level
+		lv = Math.floor(s / nv + 1);
+		var lvl = lv;
+		
+		lv_t.text = ' ' + Math.floor(nivel);
+		
+		
+		if(Math.floor(nivel) != lv && s > 0){
+			nivel = lvl;
+			level_up = true;
+			//fx_levelup.play('fx_levelup',  -1, -1, false);
+		}
+
+
+	
+		//wnasce
+		w_dt += nivel / 3;
+		if (w_dt > w_d)
+		   {
+			   create_w();
+			   w_dt = 0;
+		   }
+		//g nasce
+		g_dt += 1;
+		if (g_dt > g_d)
+		   {
+			   create_g();
+			   g_dt = 0;
+		   }
+
+		//p nasce
+		p_dt += nivel / 3;
+		if (p_dt > p_d)
+		   {
+			   create_p();
+			   p_dt = 0;
+		   }
+
+
+		 
+
+
+		//colisões
+		game.physics.collide(n, w, col_n_w);//ninho x branco 
+		game.physics.collide(line, w, col_f_w);//fim x branco
+		game.physics.collide(n, g, col_n_g);//ninho x ouro
+		game.physics.collide(line, g, col_f_g);//fim x ouro
+		game.physics.collide(n, p, col_n_p);//ninho x preto
+		game.physics.collide(line, p, col_f_p);//fim x preto
+
+
+		if (colisao_um == true){
+			var s_u = game.add.sprite( n.x , 520, "s_one");
+			s_u.exists = true;  
+	   		s_u.velocity.y -= 100;
+	  		s_one.forEach(limits_s_one.bind(s_u));
+			s_one.add(s_u);
+			colisao_um = false;
+		}
+
+
+		if (colisao_dez == true){
+			var s_d = game.add.sprite( n.x , 520, "s_ten");
+			s_d.exists = true;  
+	   		s_d.velocity.y -= 100;
+	  		s_ten.forEach(limits_s_ten.bind(s_d));
+			s_ten.add(s_d);
+			colisao_dez = false;
+		}
+
+
+		if (colisao_cinco == true){
+			var s_c = game.add.sprite( n.x , 520, "s_five");
+			s_c.exists = true;  
+	   		s_c.velocity.y -= 100;
+	  		s_five.forEach(limits_s_five.bind(s_c));
+			s_five.add(s_c);
+			colisao_cinco = false;
+		}
+
+
+		if (colisao_vida == true){
+			var l_l = game.add.sprite( 350 , 0, "s_l_one");
+			l_l.exists = true;  
+	   		l_l.velocity.y += 100;
+	  		s_l_one.forEach(limits_l_one.bind(l_l));
+			s_l_one.add(l_l);
+			colisao_vida = false;
+		}
+
+
+		if (level_up == true){
+			var lv_up = game.add.sprite( 220 , 0, "s_m_one");
+			lv_up.exists = true;  
+	   		lv_up.velocity.y += 100;
+	  		s_m_one.forEach(limits_m_one.bind(lv_up));
+			s_m_one.add(lv_up);
+			level_up = false;
+		}
+
+
+
+	}
+
+
+	if (st_n == 4){
+		game.add.tween(bg_go).to({ y: 0}, 1000, Phaser.Easing.Linear.None, true)//tweener game over
+		b_m_go.x = 100;
+		go_n_t.text = '' + s;
+		line.alpha = 0;
+		game.add.tween(go_n_t).to({ y: 200 }, 1000, Phaser.Easing.Linear.None, true)//tweener score
+	}
+
+}
+
+
+	function limits_s_one(s_one){
+		if(s_one.y <= game.world.centerY - 50){
+			s_one.kill();
+		}
+	}
+
+
+	function limits_s_ten(s_ten){
+		if(s_ten.y <= game.world.centerY - 50){
+			s_ten.kill();
+		}
+	}
+
+
+	function limits_s_five(s_five){
+		if(s_five.y <= game.world.centerY - 50){
+			s_five.kill();
+		}
+	}
+
+
+	function limits_l_one(s_l_one){
+		if(s_l_one.y <= game.world.centerY + 50){
+			s_l_one.kill();
+		}
+	}
+
+
+	function limits_m_one(s_m_one){
+		if(s_m_one.y <= game.world.centerY + 50){
+			s_m_one.kill();
+		}
+	}
+
+
+
+
+	//nasce ovo branco
+	function create_w (){	
+		var w_ = game.add.sprite( game.world.randomX , 100, "egg_w");
+	   	w_.animations.add('cai', [0, 1]);
+	   	w_.animations.play('cai', 0.35, true);
+			if(w_.x >= 0 && w_.x < 80){
+				w_.x = 45;
+				put_egg_m = true;
+			} 
+			if(w_.x >= 80 && w_.x < 160){
+				w_.x = 120;
+				put_egg_a = true;
+			} 
+			if(w_.x >= 160 && w_.x < 240){
+				w_.x = 197;
+				put_egg_b = true;
+			} 
+			if(w_.x >= 240 && w_.x < 320){
+				w_.x = 277;
+				put_egg_m2 = true;
+			}
+			if(w_.x >= 320 && w_.x <= 420){
+				w_.x = 347;
+				put_egg_a2 = true;
+			} 
+
+		//fx_porovo.play('fx_porovo',  -1, -1, false);
+
+	   	w_.exists = true;  
+	   	w_.velocity.y = w_s*2;
+	   	w.forEach(limits_w.bind(w_));
+	   	w.add(w_);
+
+
+	}
+	
+	//limite ovo branco	
+	function limits_w(w){
+		if(w.y > game.world.height + 50){
+			w.kill();
+			//fx_quebraovo.play('fx_quebraovo',  -1, -1, false);
+		}
+		if(ingame == false){
+			w.kill();
+		}
+
+	}
+	
+	//colisão ninho x branco
+	function col_n_w(n_, w_){
+		w_.kill();
+		//fx_white.play('fx_white',  -1, -1, false);
+		pts();
+		colisao_um = true;
+	}
+
+	//pontos (score) branco
+	function pts (){
+		s += 1;
+		s_t.text = ' ' + s;
+	}
+	
+	//colisão fim x branco
+	function col_f_w(f_, w_){
+		w_.kill();
+		life();
+		colisao_vida = true;
+		//fx_quebraovo.play('fx_quebraovo',  -1, -1, false);
+	}
+
+	//vida (life)
+	function life (){
+		l -= 1;
+		l_t.text = ' ' + l;
+
+		if (l <= 0){
+			//fx_gameover.play('fx_gameover',  -1, -1, false);
+			game_over();	
+		} 
+
+	}
+
+	//nasce ouro
+	function create_g (){	
+		var g_ = game.add.sprite( game.world.randomX , 100, "egg_g");
+			g_.animations.add('cai', [0, 1]);
+	   		g_.animations.play('cai', 0.35, true);
+			if(g_.x >= 0 && g_.x < 80){
+				g_.x = 45;
+				put_egg_m = true;
+			} 
+			if(g_.x >= 80 && g_.x < 160){
+				g_.x = 120;
+				put_egg_a = true;
+			} 
+			if(g_.x >= 160 && g_.x < 240){
+				g_.x = 197;
+				put_egg_b = true;
+			} 
+			if(g_.x >= 240 && g_.x < 320){
+				g_.x = 277;
+				put_egg_m2 = true;
+			}
+			if(g_.x >= 320 && g_.x <= 420){
+				g_.x = 347;
+				put_egg_a2 = true;
+			} 
+
+			//fx_porovo.play('fx_porovo',  -1, -1, false);
+
+	   g_.exists = true;  
+	   g_.velocity.y = g_s*2;
+	   g.forEach(limits_g.bind(g_));
+	   g.add(g_);
+	}
+		
+	//limite ouro
+	function limits_g(g){
+		if(g.y > game.world.height + 20){
+			g.kill();
+			//fx_quebraovo.play('fx_quebraovo',  -1, -1, false);
+		}
+		if(ingame == false){
+			g.kill();
+		}
+	}
+
+	//colisão ninho x ouro
+	function col_n_g(n_, g_){
+		g_.kill();
+		pts_g();
+		//fx_gold.play('fx_gold',  -1, -1, false);
+		colisao_dez = true;
+	}
+
+	//pontos (score) ouro
+	function pts_g (){
+		s += 10;
+		s_t.text = ' ' + s;
+	}
+
+	//colisão fim x ouro
+	function col_f_g(f_, g_){
+		g_.kill();
+		//fx_quebraovo.play('fx_quebraovo',  -1, -1, false);
+	}
+
+
+	//nasce preto
+	function create_p (){	
+		var p_ = game.add.sprite( game.world.randomX , 100, "egg_p");
+			p_.animations.add('cai', [0, 1]);
+	   		p_.animations.play('cai', 0.35, true);
+			
+			 if(p_.x >= 0 && p_.x < 80){
+				p_.x = 45;
+				put_egg_m = true;
+			} 
+			if(p_.x >= 80 && p_.x < 160){
+				p_.x = 120;
+				put_egg_a = true;
+			} 
+			if(p_.x >= 160 && p_.x < 240){
+				p_.x = 197;
+				put_egg_b = true;
+			} 
+			if(p_.x >= 240 && p_.x < 320){
+				p_.x = 277;
+				put_egg_m2 = true;
+			}
+			if(p_.x >= 320 && p_.x <= 420){
+				p_.x = 347;
+				put_egg_a2 = true;
+			} 
+
+			//fx_porovo.play('fx_porovo',  -1, -1, false);
+
+	   p_.exists = true;  
+	   p_.velocity.y = p_s*2;
+	   p.forEach(limits_g.bind(p_));
+	   p.add(p_);
+	}
+		
+	//limite preto
+	function limits_g(p){
+		if(p.y > game.world.height + 20){
+			p.kill();
+			//fx_quebraovo.play('fx_quebraovo',  -1, -1, false);
+		}
+		if(ingame == false){
+			p.kill();
+		}
+	}
+
+	//colisão ninho x preto
+	function col_n_p(n_, p_){
+		p_.kill();
+		pts_p();
+		//fx_black.play('fx_black',  -1, -1, false);
+		colisao_cinco = true;
+	}
+
+	//pontos (score) preto
+	function pts_p (){
+		s -= 5;
+		s_t.text = ' ' + s;
+		if (s <= 0){
+			s = 0;
+			s_t.text = ' 0';
+		}
+	}
+
+	//colisão fim x preto
+	function col_f_p(f_, p_){
+		p_.kill();
+		//fx_quebraovo.play('fx_quebraovo',  -1, -1, false);
+	}
+
+
+	//função botao jogar
+	function jogar () {
+		b_j.x = -200;
+		b_a.x = -200;
+		lg.x = -350;
+		
+		st_n += 1;
+	}
+
+
+//função botao ajuda
+	function ajuda () {
+		if(st_n == 2){
+			aj = true;
+		}
+	}
+
+//função botao menu
+	function menu () {
+		if(st_n == 2){
+			aj = false;
+		}
+	}
+
+
+//função botao menu_go
+	function menu_go () {
+		if(st_n == 4){
+			st_n = 2;
+
+			b_m_go.x = -200;
+			game.add.tween(go_n_t).to({ y: -200 }, 1000, Phaser.Easing.Linear.None, true)//tweener
+			game.add.tween(bg_go).to({ y: 650 }, 1000, Phaser.Easing.Linear.None, true)//tweener
+
+		}
+		aj = false
+	}
+
+
+//funcao game over
+	function game_over(){
+		st_n += 1;
+
+		game.add.tween(b).to({ y: -150 }, 1000, Phaser.Easing.Linear.None, true)//tweener bg
+		game.add.tween(h).to({ y: -150 }, 1000, Phaser.Easing.Linear.None, true)//tweener puleiro
+		game.add.tween(hud).to({ y: -150 }, 1000, Phaser.Easing.Linear.None, true)//tweener hud
+		game.add.tween(s_t).to({ y: -150 }, 1000, Phaser.Easing.Linear.None, true)//tweener score
+		game.add.tween(lv_t).to({ y: -150 }, 1000, Phaser.Easing.Linear.None, true)//tweener level
+		game.add.tween(l_t).to({ y: -150 }, 1000, Phaser.Easing.Linear.None, true)//tweener life
+		n.y = 800;
+		f.y = 800;
+		game.add.tween(bt_pause).to({ x: 420 }, 1000, Phaser.Easing.Linear.None, true);//tweener life
+		game.add.tween(bt_of_s).to({ x: 420 }, 1000, Phaser.Easing.Linear.None, true);//tweener life
+		game.add.tween(bt_s).to({ x: 420 }, 1000, Phaser.Easing.Linear.None, true);//tweener life
+		
+		game.add.tween(g_m).to({ y: -150 }, 1000, Phaser.Easing.Linear.None, true)//galinha 1
+		game.add.tween(g_a).to({ y: -150 }, 1000, Phaser.Easing.Linear.None, true)//galinha 2
+		game.add.tween(g_b).to({ y: -150 }, 1000, Phaser.Easing.Linear.None, true)//galinha centro
+		game.add.tween(g_m2).to({ y: -150 }, 1000, Phaser.Easing.Linear.None, true)//galinha 4
+		game.add.tween(g_a2).to({ y: -150 }, 1000, Phaser.Easing.Linear.None, true)//galinha 5
+
+	}
+
+	function pause (){
+		game.paused =! game.paused;
+	}
+
+	function on_som (){
+		bt_s.x = 420;
+		bt_of_s.x = 345;
+		
+		//bg_sound.play();
+		//bg_sound.volume = 0.2;
+	}
+
+	function off_som (){
+		bt_of_s.x = 450;
+		bt_s.x = 345;
+
+		//bg_sound.pause();
+	}
+
+
+	
+
+	//debugs renderizadores de info
+	/*function render() {
+		//d.forEach(render_d, this);
+		game.debug.renderSpriteBody(n);
+	}
+	
+	function render_d(s) {
+       game.debug.renderSpriteBounds(s, 'rgba(30,200,55,0.5)', true);
+   }*/
+
+
+})();
+
+</script>
+
+</body>
+</html>
